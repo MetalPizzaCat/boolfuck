@@ -1,10 +1,17 @@
-﻿using System;
+﻿/**
+Bool fuck esoteric language interpreter 
+Originally written for Esolang Interpreters #4 - Boolfuck Interpreter kata on Code Wars
+
+https://www.codewars.com/kata/esolang-interpreters-number-4-boolfuck-interpreter
+*/
+using System;
 using System.Collections.Generic;
 using System.Text;
 public class Boolfuck
 {
     public static string interpret(string code, string input)
     {
+
         //List of all jumps saved before execution even starts
         //to avoid searching pairs during execution
         Dictionary<int, int> borders = new Dictionary<int, int>();
@@ -25,17 +32,20 @@ public class Boolfuck
                 borders.Add(opening, i);
             }
         }
+        //we store result as int list for simplicity 
         List<int> result = new List<int>();
-        List<bool> tape = new List<bool>(new bool[3000]);
+        
+        List<bool> tape = new List<bool>(new bool[50]);
         //put it in the middle i guess?
         //task is kinda confusing ngl
         int ptr = tape.Count / 2;
+        //Operation pointer(index of currently executed operation)
         int opPtr = 0;
 
         //which letter of the input are we reading
-        int inputChunckId = 0;
+        int inChunk = 0;
         //which bit of the chunk we read last
-        int inputChunkBit = 0;
+        int inChunkBit = 0;
 
         //which letter of the out are we writing to
         int outChunk = 0;
@@ -50,13 +60,34 @@ public class Boolfuck
                     tape[ptr] = !tape[ptr];
                     break;
                 case ',':
+                    //if we reached end of input we need to put 0s
+                    if (inChunk >= input.Length)
+                    {
+                        tape[ptr] = false;
+                    }
+                    else
+                    {
+                        //this is a bit of bit math
+                        //to get specific bit we first create a mask by shifting 1 to needed position
+                        // which will make other positions to be filled with 0s
+                        tape[ptr] = ((input[inChunk] & (1 << inChunkBit)) >> inChunkBit) == 1;
+                        //if we read more then 8 bits we more to the next byte
+                        if (++inChunkBit >= 8)
+                        {
+                            inChunk++;
+                            inChunkBit = 0;
+                        }
+                    }
                     break;
                 case ';':
+                    //if chunk bit is 0 that means we haven't put number in yet
                     if (outChunkBit == 0)
                     {
                         result.Add(0);
                     }
+                    //take value and shift it into needed position
                     result[outChunk] = (int)result[outChunk] | ((tape[ptr] ? 1 : 0) << outChunkBit);
+                    //if we reached 8 we filled out our chunk
                     if (++outChunkBit >= 8)
                     {
                         outChunk++;
@@ -65,9 +96,23 @@ public class Boolfuck
                     break;
                 case '>':
                     ptr++;
+                    //expanding behavior
+                    //just add more data to the end
+                    if (ptr >= tape.Count)
+                    {
+                        tape.AddRange(new bool[50]);
+                    }
                     break;
                 case '<':
                     ptr--;
+                    //expanding behavior
+                    //just add more data in the front
+                    //and update pointer
+                    if (ptr < 0)
+                    {
+                        tape.InsertRange(0, new bool[50]);
+                        ptr += 50;
+                    }
                     break;
                 case '[':
                     if (!tape[ptr])
@@ -84,11 +129,7 @@ public class Boolfuck
             }
             opPtr++;
         }
-
-        for (int i = 0; i < result.Count; i++)
-        {
-            System.Console.WriteLine(result[i]);
-        }
+        
         string str = string.Empty;
         foreach (int val in result)
         {
@@ -99,15 +140,7 @@ public class Boolfuck
 
     public static void Main(string[] args)
     {
-        string result = interpret(";", "");
-        string str = "\u0000";
-        //num & (1 << i) >> i read ith bit of the number
-        int num = (int)'a';
-        for (int i = 0; i < 8; i++)
-        {
-            //  System.Console.WriteLine($"{(num & (1 << i)) >> i}");
-        }
-        //System.Console.WriteLine(result[0] == '\0');
+        //idk do some calls
         return;
     }
 }
